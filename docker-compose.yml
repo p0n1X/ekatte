@@ -1,0 +1,53 @@
+version: "3.7"
+
+services:
+    mysql:
+        image: mysql:8.0
+        restart: always
+        container_name: ekatte_db
+        env_file:
+            - .env
+        environment:
+            TZ: "Europe/Sofia"
+            MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+            MYSQL_DATABASE: ${DB_DATABASE}
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_HOST: ${DB_HOST}
+        volumes:
+            - "./server:/var/run/mysqld"
+        ports:
+            - '3306:3306'
+        expose:
+            - '3306'
+
+    phpmyadmin:
+        image: phpmyadmin
+        restart: always
+        container_name: ekatte_phpmyadmin
+        ports:
+            - 8080:80
+        environment:
+            PMA_HOST: ${DB_HOST}
+            PMA_PORT: ${DB_PORT}
+            PMA_USER: ${DB_USERNAME}
+            PMA_PASSWORD: ${DB_PASSWORD}
+
+    app:
+        build:
+            context: .
+            dockerfile: ./Dockerfile
+        container_name: ekatte_app
+        restart: always
+        volumes:
+            - "./:/var/www/html/"
+        ports:
+            - "80:80"
+        environment:
+            MYSQL_USER: ${DB_USERNAME}
+            MYSQL_PASSWORD: ${DB_PASSWORD}
+            MYSQL_HOST: ${DB_HOST}
+            MYSQL_DATABASE: ${DB_DATABASE}
+        depends_on:
+            - mysql
+            - phpmyadmin
